@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
+import { api_base } from '@/external/bot-skeleton';
 import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import { useStore } from '@/hooks/useStore';
 import {
@@ -30,11 +31,14 @@ type TError = null | {
 
 const subscriptions: TSubscription = {};
 
+const getChartApi = () => chart_api?.api || api_base?.api;
+
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
     const barriers: [] = [];
     const { common, ui } = useStore();
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
+    const [is_connection_opened, setIsConnectionOpened] = useState(false);
 
     const {
         chart_type,
@@ -54,25 +58,64 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { is_drawer_open } = run_panel;
     const { is_chart_modal_visible } = dashboard;
     const settings = {
-        assetInformation: false, // ui.is_chart_asset_info_visible,
+        assetInformation: false,
         countdown: true,
-        isHighestLowestMarkerEnabled: false, // TODO: Pending UI,
+        isHighestLowestMarkerEnabled: false,
         language: common.current_language.toLowerCase(),
         position: ui.is_chart_layout_default ? 'bottom' : 'left',
         theme: ui.is_dark_mode_on ? 'dark' : 'light',
     };
+
     useEffect(() => {
-        // Safari browser detection
         const isSafariBrowser = () => {
             const ua = navigator.userAgent.toLowerCase();
             return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1 && ua.indexOf('android') === -1;
         };
-
         setIsSafari(isSafariBrowser());
 
         return () => {
-            chart_api.api.forgetAll('ticks');
+            chart_api?.api?.forgetAll('ticks');
         };
+    }, []);
+
+    useEffect(() => {
+        const initChartConnection = async () => {
+            if (!chart_api.api) {
+                await chart_api.init();
+            }
+
+            const checkReady = () => {
+                const api = getChartApi();
+                if (!api) return false;
+                const readyState = api.connection?.readyState;
+                return readyState === WebSocket.OPEN || readyState === undefined;
+            };
+
+            if (checkReady()) {
+                setIsConnectionOpened(true);
+                return;
+            }
+
+            const interval = setInterval(() => {
+                if (checkReady()) {
+                    setIsConnectionOpened(true);
+                    clearInterval(interval);
+                }
+            }, 100);
+
+            const timeout = setTimeout(() => {
+                clearInterval(interval);
+                const api = getChartApi();
+                if (api) setIsConnectionOpened(true);
+            }, 5000);
+
+            return () => {
+                clearInterval(interval);
+                clearTimeout(timeout);
+            };
+        };
+
+        initChartConnection();
     }, []);
 
     useEffect(() => {
@@ -82,7 +125,6 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     useEffect(() => {
         if (!symbol) {
             updateSymbol();
-            // Retry until active_symbols load and a symbol becomes available
             const retry = setInterval(() => {
                 updateSymbol();
             }, 500);
@@ -91,21 +133,31 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [symbol]);
 
-    const requestAPI = (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
-        return chart_api.api.send(req);
+    const requestAPI = async (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
+        const api = getChartApi();
+        if (!api) {
+            throw new Error('Chart API not initialized');
+        }
+        return api.send(req);
     };
+
     const requestForgetStream = (subscription_id: string) => {
-        subscription_id && chart_api.api.forget(subscription_id);
+        if (subscription_id) {
+            const api = getChartApi();
+            api?.forget(subscription_id);
+        }
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
         try {
             requestForgetStream(chartSubscriptionIdRef.current);
-            const history = await chart_api.api.send(req);
+            const api = getChartApi();
+            if (!api) throw new Error('Chart API not initialized');
+            const history = await api.send(req);
             setChartSubscriptionId(history?.subscription.id);
             if (history) callback(history);
             if (req.subscribe === 1) {
-                subscriptions[history?.subscription.id] = chart_api.api
+                subscriptions[history?.subscription.id] = api
                     .onMessage()
                     ?.subscribe(({ data }: { data: TicksHistoryResponse }) => {
                         callback(data);
@@ -113,13 +165,13 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             }
         } catch (e) {
             // eslint-disable-next-line no-console
-            (e as TError)?.error?.code === 'MarketIsClosed' && callback([]); //if market is closed sending a empty array  to resolve
+            (e as TError)?.error?.code === 'MarketIsClosed' && callback([]);
             console.log((e as TError)?.error?.message);
         }
     };
 
     if (!symbol) return null;
-    const is_connection_opened = !!chart_api?.api;
+
     return (
         <div
             className={classNames('dashboard__chart-wrapper', {
@@ -150,7 +202,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 granularity={granularity}
                 requestAPI={requestAPI}
                 requestForget={() => {}}
-                requestForgetStream={() => {}}
+                requestForgetStream={requestForgetStream}
                 requestSubscribe={requestSubscribe}
                 settings={settings}
                 symbol={symbol}
