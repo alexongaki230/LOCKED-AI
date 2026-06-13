@@ -21,7 +21,6 @@ import AccountsInfoLoader from './account-info-loader';
 import AccountSwitcher from './account-switcher';
 import MenuItems from './menu-items';
 import MobileMenu from './mobile-menu';
-import PlatformSwitcher from './platform-switcher';
 import './header.scss';
 
 type TAppHeaderProps = {
@@ -215,9 +214,7 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
             <Wrapper variant='left'>
                 <AppLogo />
                 <MobileMenu />
-                {isDesktop && <MenuItems.TradershubLink />}
                 {isDesktop && <MenuItems />}
-                {isDesktop && <PlatformSwitcher />}
             </Wrapper>
             <Wrapper variant='right'>
                 {!isDesktop && <PWAInstallButton variant='primary' size='medium' />}
