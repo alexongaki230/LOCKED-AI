@@ -154,13 +154,6 @@ const FreeBots = observer(() => {
 
     return (
         <div className='free-bots'>
-            <div className='free-bots__header'>
-                <h1 className='free-bots__title'>Free Trading Bots</h1>
-                <p className='free-bots__subtitle'>
-                    Explore our collection of pre-built trading bots. Click on any bot to load it into the Bot Builder.
-                </p>
-            </div>
-
             <div className='free-bots__categories'>
                 {categories.map(category => (
                     <button
