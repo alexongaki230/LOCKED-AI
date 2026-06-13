@@ -13,7 +13,6 @@ import {
     rudderStackSendAnnouncementActionEvent,
     rudderStackSendAnnouncementClickEvent,
 } from '../../../analytics/rudderstack-dashboard';
-import { guide_content } from '../../tutorials/constants';
 import { performButtonAction } from './utils/accumulator-helper-functions';
 import { MessageAnnounce, TitleAnnounce } from './announcement-components';
 import AnnouncementDialog from './announcement-dialog';
@@ -29,7 +28,6 @@ type TAnnouncements = {
 const Announcements = observer(({ is_mobile, is_tablet, handleTabChange }: TAnnouncements) => {
     const {
         load_modal: { toggleLoadModal },
-        dashboard: { showVideoDialog },
         quick_strategy: { setFormVisibility },
     } = useStore();
     const [is_announce_dialog_open, setIsAnnounceDialogOpen] = React.useState(false);
@@ -144,13 +142,6 @@ const Announcements = observer(({ is_mobile, is_tablet, handleTabChange }: TAnno
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [read_announcements_map]);
 
-    const openAccumulatorsVideo = () => {
-        const accumulators_video = guide_content().find(guide_content => guide_content.id === 4);
-        if (accumulators_video) {
-            showVideoDialog({ url: accumulators_video.url, type: 'url' });
-        }
-    };
-
     const handleOnCancel = () => {
         rudderStackSendAnnouncementActionEvent({
             announcement_name: selected_announcement?.announcement.main_title,
@@ -158,9 +149,6 @@ const Announcements = observer(({ is_mobile, is_tablet, handleTabChange }: TAnno
         });
         if (selected_announcement?.switch_tab_on_cancel) {
             handleTabChange(selected_announcement.switch_tab_on_cancel);
-            if (selected_announcement.announcement.id === 'ACCUMULATOR_ANNOUNCE') {
-                openAccumulatorsVideo();
-            }
         }
         selected_announcement?.onCancel?.();
         setSelectedAnnouncement(null);

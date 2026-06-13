@@ -1,7 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { useDevice } from '@deriv-com/ui';
-import Accordion from '../../../tutorials/dbot-tours/common/accordion';
+import Accordion from './quick-strategy-accordion';
 import StrategyDescription from '../descriptions/strategy-description';
 import { TDescription, TDescriptionItem } from '../types';
 
