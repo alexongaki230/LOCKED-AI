@@ -8,8 +8,8 @@ export const AppLogo = () => {
     return (
         <div className='app-header__logo'>
             <img
-                src='/frosty-traders-logo.jpeg'
-                alt='FrostyTraders'
+                src='/frostydbot-logo.jpeg'
+                alt='FrostyDBot'
                 className='app-header__logo-img'
             />
         </div>
