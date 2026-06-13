@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import AuthLoadingWrapper from '@/components/auth-loading-wrapper';
 import useLiveChat from '@/components/chat/useLiveChat';
 import { BOT_RESTRICTED_COUNTRIES_LIST } from '@/components/layout/header/utils';
-import ChunkLoader from '@/components/loader/chunk-loader';
+import FrostyLoader from '@/components/loader/frosty-loader';
 import PWAInstallModal from '@/components/pwa-install-modal';
 import { getUrlBase } from '@/components/shared';
 import TncStatusUpdateModal from '@/components/tnc-status-update-modal';
@@ -302,7 +302,7 @@ const AppContent = observer(() => {
     const getLoadingMessage = () => {
         if (is_eu_error_loading) return '';
         if (!isOnline) return localize('Loading offline dashboard...');
-        return localize('Initializing Deriv Bot account...');
+        return localize('Initializing FrostyDBot account...');
     };
 
     // Skip loading entirely when offline - show dashboard directly
@@ -329,7 +329,7 @@ const AppContent = observer(() => {
     }
 
     return is_loading ? (
-        <ChunkLoader message={getLoadingMessage()} />
+        <FrostyLoader message={getLoadingMessage()} />
     ) : (
         <AuthLoadingWrapper>
             <ThemeProvider theme={is_dark_mode_on ? 'dark' : 'light'}>

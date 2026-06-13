@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { useLocation, useNavigate } from 'react-router-dom';
-import ChunkLoader from '@/components/loader/chunk-loader';
+import FrostyLoader from '@/components/loader/frosty-loader';
 import { generateOAuthURL } from '@/components/shared';
 import DesktopWrapper from '@/components/shared_ui/desktop-wrapper';
 import Dialog from '@/components/shared_ui/dialog';
@@ -315,7 +315,7 @@ const AppWrapper = observer(() => {
                                 }
                             >
                                 <Suspense
-                                    fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}
+                                    fallback={<FrostyLoader message={localize('Please wait, loading chart...')} />}
                                 >
                                     <ChartWrapper show_digits_stats={false} />
                                 </Suspense>
@@ -336,7 +336,7 @@ const AppWrapper = observer(() => {
                                 <div className='free-bots-wrapper'>
                                     <Suspense
                                         fallback={
-                                            <ChunkLoader message={localize('Please wait, loading free bots...')} />
+                                            <FrostyLoader message={localize('Please wait, loading free bots...')} />
                                         }
                                     >
                                         <FreeBots />
@@ -359,7 +359,7 @@ const AppWrapper = observer(() => {
                                 <div className='analysis-tool-wrapper'>
                                     <Suspense
                                         fallback={
-                                            <ChunkLoader message={localize('Please wait, loading analysis tool...')} />
+                                            <FrostyLoader message={localize('Please wait, loading analysis tool...')} />
                                         }
                                     >
                                         <AnalysisTool />

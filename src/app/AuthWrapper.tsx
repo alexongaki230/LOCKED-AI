@@ -1,6 +1,6 @@
 import React from 'react';
 import Cookies from 'js-cookie';
-import ChunkLoader from '@/components/loader/chunk-loader';
+import FrostyLoader from '@/components/loader/frosty-loader';
 import { generateDerivApiInstance } from '@/external/bot-skeleton/services/api/appId';
 import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
 import { useOfflineDetection } from '@/hooks/useOfflineDetection';
@@ -146,7 +146,7 @@ export const AuthWrapper = () => {
     };
 
     if (!isAuthComplete) {
-        return <ChunkLoader message={getLoadingMessage()} />;
+        return <FrostyLoader message={getLoadingMessage()} />;
     }
 
     return <App />;

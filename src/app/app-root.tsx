@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import ErrorBoundary from '@/components/error-component/error-boundary';
 import ErrorComponent from '@/components/error-component/error-component';
-import ChunkLoader from '@/components/loader/chunk-loader';
+import FrostyLoader from '@/components/loader/frosty-loader';
 import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import useTMB from '@/hooks/useTMB';
@@ -12,7 +12,7 @@ import './app-root.scss';
 const AppContent = lazy(() => import('./app-content'));
 
 const AppRootLoader = () => {
-    return <ChunkLoader message={localize('Loading...')} />;
+    return <FrostyLoader message={localize('Loading...')} />;
 };
 
 const ErrorComponentWrapper = observer(() => {
@@ -62,7 +62,7 @@ const AppRoot = () => {
     if (!store) return <AppRootLoader />;
 
     return (
-        <Suspense fallback={<AppRootLoader />}>
+        <Suspense fallback={<FrostyLoader message='Loading FrostyDBot…' />}>
             <ErrorBoundary root_store={store}>
                 <ErrorComponentWrapper />
                 <AppContent />

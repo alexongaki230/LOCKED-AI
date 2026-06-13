@@ -2,7 +2,7 @@ import { initSurvicate } from '../public-path';
 import { lazy, Suspense } from 'react';
 import React from 'react';
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom';
-import ChunkLoader from '@/components/loader/chunk-loader';
+import FrostyLoader from '@/components/loader/frosty-loader';
 import RoutePromptDialog from '@/components/route-prompt-dialog';
 import { crypto_currencies_display_order, fiat_currencies_display_order } from '@/components/shared';
 import { useOfflineDetection } from '@/hooks/useOfflineDetection';
@@ -33,7 +33,7 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => {
         return localize('Please wait while we connect to the server...');
     };
 
-    return <Suspense fallback={<ChunkLoader message={getLoadingMessage()} />}>{children}</Suspense>;
+    return <Suspense fallback={<FrostyLoader message={getLoadingMessage()} />}>{children}</Suspense>;
 };
 
 const router = createBrowserRouter(

@@ -1,0 +1,95 @@
+.frosty-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #0d0d0d 0%, #1a1200 60%, #0d0d0d 100%);
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 4rem 5rem;
+    }
+
+    &__logo {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: contain;
+        box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.4), 0 0 40px rgba(201, 162, 39, 0.25);
+        animation: frosty-logo-pulse 2s ease-in-out infinite alternate;
+    }
+
+    &__name {
+        display: flex;
+        align-items: center;
+        font-size: 2.8rem;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+
+        &__char {
+            display: inline-block;
+            background: linear-gradient(135deg, #c9a227 0%, #ffe066 40%, #fff5a0 60%, #c9a227 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: frosty-shimmer 2.4s ease-in-out infinite, frosty-char-pulse 1.8s ease-in-out infinite alternate;
+        }
+    }
+
+    &__bar-wrap {
+        width: 240px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    &__bar {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #c9a227, #ffe066, #c9a227);
+        background-size: 200% 100%;
+        animation: frosty-bar-slide 1.6s ease-in-out infinite;
+    }
+
+    &__message {
+        font-size: 1.3rem;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 0.04em;
+        margin: 0;
+    }
+}
+
+@keyframes frosty-logo-pulse {
+    0% {
+        box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.3), 0 0 30px rgba(201, 162, 39, 0.15);
+        transform: scale(1);
+    }
+    100% {
+        box-shadow: 0 0 0 5px rgba(201, 162, 39, 0.55), 0 0 55px rgba(201, 162, 39, 0.4);
+        transform: scale(1.04);
+    }
+}
+
+@keyframes frosty-shimmer {
+    0%   { background-position: 0% center; }
+    50%  { background-position: 100% center; }
+    100% { background-position: 0% center; }
+}
+
+@keyframes frosty-char-pulse {
+    0%   { filter: drop-shadow(0 0 2px rgba(201, 162, 39, 0.4)); }
+    100% { filter: drop-shadow(0 0 10px rgba(255, 224, 102, 1)); }
+}
+
+@keyframes frosty-bar-slide {
+    0%   { background-position: 100% 0; transform: translateX(-100%); }
+    50%  { background-position: 0% 0; transform: translateX(0%); }
+    100% { background-position: 100% 0; transform: translateX(100%); }
+}
