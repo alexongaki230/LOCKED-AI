@@ -395,16 +395,18 @@
             }
 
             &__images {
-                background-color: var(--general-section-1);
+                background: linear-gradient(145deg, #fffbf0, #fdf3d0);
                 margin-bottom: 0.8rem;
                 border-radius: 0.8rem;
                 padding: 1.6rem;
                 position: relative;
                 overflow: hidden;
-                border: 1.5px solid transparent;
+                border: 1.5px solid rgba(211, 162, 85, 0.35);
+                box-shadow: 0 0 10px 2px rgba(211, 162, 85, 0.2);
                 transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+                animation: gold-beacon 2.2s ease-in-out infinite;
 
-                /* shimmer overlay */
+                /* shimmer sweep */
                 &::after {
                     content: '';
                     position: absolute;
@@ -415,10 +417,21 @@
                     background: linear-gradient(
                         120deg,
                         transparent 20%,
-                        rgba(255, 215, 100, 0.55) 50%,
+                        rgba(255, 215, 100, 0.6) 50%,
                         transparent 80%
                     );
                     animation: gold-shimmer 2.4s ease-in-out infinite;
+                    pointer-events: none;
+                }
+
+                /* pulsing ring */
+                &::before {
+                    content: '';
+                    position: absolute;
+                    inset: -3px;
+                    border-radius: 10px;
+                    border: 2px solid rgba(211, 162, 85, 0.0);
+                    animation: gold-ring-pulse 2.2s ease-in-out infinite;
                     pointer-events: none;
                 }
 
@@ -431,12 +444,13 @@
                 }
             }
 
-            /* glow pulse on the whole block */
+            /* glow & lift on hover */
             &__block {
                 &:hover .tab__dashboard__table__images {
-                    border-color: rgba(211, 162, 85, 0.8);
-                    box-shadow: 0 0 18px 4px rgba(211, 162, 85, 0.45);
-                    transform: translateY(-3px) scale(1.04);
+                    border-color: rgba(211, 162, 85, 0.9);
+                    box-shadow: 0 0 24px 6px rgba(211, 162, 85, 0.55);
+                    transform: translateY(-4px) scale(1.06);
+                    animation: none;
                 }
 
                 &:hover span {
@@ -466,12 +480,29 @@
     }
 }
 
-@keyframes gold-pulse {
+@keyframes gold-beacon {
     0%, 100% {
-        box-shadow: 0 0 6px 1px rgba(211, 162, 85, 0.3);
+        box-shadow: 0 0 8px 2px rgba(211, 162, 85, 0.2);
+        border-color: rgba(211, 162, 85, 0.35);
     }
     50% {
-        box-shadow: 0 0 18px 5px rgba(211, 162, 85, 0.65);
+        box-shadow: 0 0 22px 6px rgba(211, 162, 85, 0.55);
+        border-color: rgba(211, 162, 85, 0.75);
+    }
+}
+
+@keyframes gold-ring-pulse {
+    0%, 100% {
+        border-color: rgba(211, 162, 85, 0.0);
+        transform: scale(1);
+    }
+    40% {
+        border-color: rgba(211, 162, 85, 0.7);
+        transform: scale(1.08);
+    }
+    70% {
+        border-color: rgba(211, 162, 85, 0.2);
+        transform: scale(1.14);
     }
 }
 

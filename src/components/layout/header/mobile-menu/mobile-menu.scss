@@ -138,7 +138,8 @@
     }
 
     .deriv-drawer__container {
-        background: var(--general-main-1);
+        background: linear-gradient(180deg, #fffbf0 0%, #fdf3d0 60%, #faeec0 100%);
+        border-right: 2px solid rgba(180, 130, 40, 0.25);
     }
 
     &__toggle,
