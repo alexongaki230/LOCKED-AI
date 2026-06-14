@@ -37,6 +37,7 @@ const FreeBots = lazy(() => import('../free-bots'));
 const AnalysisTool = lazy(() => import('../analysis-tool'));
 const MarketAnalyzer = lazy(() => import('../market-analyzer'));
 const DCircles = lazy(() => import('../d-circles'));
+const CopyTrading = lazy(() => import('../copy-trading'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -68,7 +69,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'free_bots', 'analysis_tool', 'market_analyzer', 'd_circles'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'free_bots', 'analysis_tool', 'market_analyzer', 'd_circles', 'copy_trading'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -87,7 +88,7 @@ const AppWrapper = observer(() => {
 
     React.useEffect(() => {
         const el_dashboard = document.getElementById('id-dbot-dashboard');
-        const el_last_tab = document.getElementById('id-d-circles');
+        const el_last_tab = document.getElementById('id-copy-trading');
 
         const observer_dashboard = new window.IntersectionObserver(
             ([entry]) => {
@@ -392,6 +393,27 @@ const AppWrapper = observer(() => {
                                 }
                                 id='id-d-circles'
                             />
+                            <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Copy Trading' />
+                                    </>
+                                }
+                                id='id-copy-trading'
+                            >
+                                <Suspense
+                                    fallback={
+                                        <FrostyLoader message={localize('Please wait, loading copy trading...')} />
+                                    }
+                                >
+                                    <CopyTrading />
+                                </Suspense>
+                            </div>
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
                     </div>
