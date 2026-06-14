@@ -173,12 +173,27 @@ const CopyTrading = observer(() => {
                         balance: Number(acc.balance).toFixed(2),
                     });
                     setConnectionStatus('connected');
+                    ws.send(JSON.stringify({ balance: 1, subscribe: 1 }));
                     pingIntervalRef.current = setInterval(() => {
                         if (ws.readyState === WebSocket.OPEN) {
                             ws.send(JSON.stringify({ ping: 1 }));
                         }
                     }, 25000);
                     resolve(true);
+                }
+
+                if (data.msg_type === 'balance') {
+                    if (data.balance && !data.error) {
+                        setTargetAccountInfo(prev =>
+                            prev
+                                ? {
+                                      ...prev,
+                                      balance: Number(data.balance.balance).toFixed(2),
+                                      currency: data.balance.currency || prev.currency,
+                                  }
+                                : prev
+                        );
+                    }
                 }
 
                 if (data.msg_type === 'copy_start') {
@@ -465,6 +480,53 @@ const CopyTrading = observer(() => {
                             </div>
                         )}
                     </div>
+
+                    {isSourceDemo && allowDemoToReal && (
+                        <div className='copy-trading__card copy-trading__card--balance'>
+                            <h2 className='copy-trading__card-title'>
+                                💳 Real Account Balance
+                                {copyStatus === 'active' && (
+                                    <span className='copy-trading__balance-live-dot' title='Live' />
+                                )}
+                            </h2>
+                            {targetAccountInfo ? (
+                                <div className='copy-trading__balance-display'>
+                                    <span className='copy-trading__balance-amount'>
+                                        {targetAccountInfo.balance}
+                                    </span>
+                                    <span className='copy-trading__balance-currency'>
+                                        {targetAccountInfo.currency}
+                                    </span>
+                                    {startBalanceRef.current > 0 && (
+                                        <span
+                                            className={`copy-trading__balance-change ${
+                                                Number(targetAccountInfo.balance) >= startBalanceRef.current
+                                                    ? 'copy-trading__balance-change--up'
+                                                    : 'copy-trading__balance-change--down'
+                                            }`}
+                                        >
+                                            {Number(targetAccountInfo.balance) >= startBalanceRef.current ? '+' : ''}
+                                            {(Number(targetAccountInfo.balance) - startBalanceRef.current).toFixed(2)}
+                                        </span>
+                                    )}
+                                    <div className='copy-trading__balance-row'>
+                                        <span className='copy-trading__account-label'>Account</span>
+                                        <span className='copy-trading__account-value'>{targetAccountInfo.loginid}</span>
+                                    </div>
+                                    <div className='copy-trading__balance-row'>
+                                        <span className='copy-trading__account-label'>Session start</span>
+                                        <span className='copy-trading__account-value'>
+                                            {startBalanceRef.current > 0 ? `${startBalanceRef.current.toFixed(2)} ${targetAccountInfo.currency}` : '—'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className='copy-trading__balance-idle'>
+                                    Start copy trading to see the real account balance live.
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     <div className='copy-trading__card'>
                         <h2 className='copy-trading__card-title'>Settings & Risk Controls</h2>
