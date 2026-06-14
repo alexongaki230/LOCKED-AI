@@ -99,8 +99,8 @@
             }
 
             &__list {
-                background: linear-gradient(180deg, #1a1200 0%, #2a1e00 60%, #1e1500 100%);
-                border-bottom: 1px solid rgba(211, 162, 85, 0.25);
+                background: linear-gradient(180deg, #fffbf0 0%, #fdf3d0 60%, #faeec0 100%);
+                border-bottom: 2px solid rgba(180, 130, 40, 0.3);
                 justify-content: start;
 
                 @include mobile-or-tablet-screen {
