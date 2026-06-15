@@ -104,19 +104,11 @@ const BOTS: Bot[] = [
     },
     {
         id: '11',
-        name: 'Even Odd Thunder AI Pro',
-        description: 'Professional even/odd prediction bot with thunder-fast execution.',
-        fileName: 'BINARYTOOL@EVEN_ODD_THUNDER_AI_PRO_BOT_1765711647662.xml',
+        name: 'Frosty ♻ Even⏫Odd⏬ Engine',
+        description: 'Smart even/odd engine on Volatility 10 — analyses 100 digits, trades when edge ≥56%, martingale x2, take profit $5, stop loss $15.',
+        fileName: 'FROSTY_♻_EVEN⏫ODD⏬_ENGINE_1781503809550.xml',
         category: 'Even/Odd',
-        icon: '⚡',
-    },
-    {
-        id: '12',
-        name: 'Even & Odd AI Bot',
-        description: 'Smart AI bot specialized in even and odd digit predictions.',
-        fileName: 'BINARYTOOL@EVEN&ODD_AI_BOT_(2)_1765711647663.xml',
-        category: 'Even/Odd',
-        icon: '🎲',
+        icon: '♻️',
     },
 ];
 
