@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { load, save_types } from '@/external/bot-skeleton';
+import { getBotXML, isAllowedDomain } from './bot-data';
 import './free-bots.scss';
 
 interface Bot {
@@ -124,14 +125,17 @@ const FreeBots = observer(() => {
     const loadBot = async (bot: Bot) => {
         try {
             setLoadingBotId(bot.id);
-            
-            const response = await fetch(`/bots/${bot.fileName}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch bot file');
+
+            if (!isAllowedDomain()) {
+                alert('⛔ This bot is locked to FrostyDBot and can only be used at frostydbot.replit.app');
+                return;
             }
-            
-            const xmlContent = await response.text();
-            
+
+            const xmlContent = getBotXML(bot.id);
+            if (!xmlContent) {
+                throw new Error('Bot data unavailable');
+            }
+
             await load({
                 block_string: xmlContent,
                 file_name: bot.name,
