@@ -127,7 +127,7 @@ const FreeBots = observer(() => {
             setLoadingBotId(bot.id);
 
             if (!isAllowedDomain()) {
-                alert('⛔ This bot is locked to FrostyDBot and can only be used at frostydbot.replit.app');
+                alert('⛔ This bot is locked to FrostyDBot and can only be used at frostydbot.site');
                 return;
             }
 

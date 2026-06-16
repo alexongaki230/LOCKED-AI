@@ -4,7 +4,8 @@
 const ALLOWED_ORIGINS: string[] = [
   'localhost',
   '127.0.0.1',
-  // Add your deployed domain here, e.g. 'frostydbot.replit.app'
+  'frostydbot.site',
+  'www.frostydbot.site',
 ];
 
 export function isAllowedDomain(): boolean {
@@ -33,6 +34,6 @@ export function getBotXML(id: string): string | null {
   const encoded = BOT_DATA[id];
   if (!encoded) return null;
   const xml = atob(encoded);
-  const watermark = '<!-- FrostyDBot © frostydbot.replit.app | Locked to official site only -->';
+  const watermark = '<!-- FrostyDBot © frostydbot.site | Locked to official site only -->';
   return xml.replace(/^(<\?xml[^>]*>\s*)?/, match => match + watermark + '\n');
 }
