@@ -303,7 +303,7 @@ const AppContent = observer(() => {
     const getLoadingMessage = () => {
         if (is_eu_error_loading) return '';
         if (!isOnline) return localize('Loading offline dashboard...');
-        return localize('Initializing FrostyDBot account...');
+        return localize('Getting things ready...');
     };
 
     // Skip loading entirely when offline - show dashboard directly

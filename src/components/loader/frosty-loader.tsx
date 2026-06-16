@@ -19,7 +19,7 @@ export default function FrostyLoader({ message }: { message: string }) {
                 <div className='frosty-loader__bar-wrap'>
                     <div className='frosty-loader__bar' />
                 </div>
-                <p className='frosty-loader__message'>{message || 'Initializing FrostyDBot…'}</p>
+                <p className='frosty-loader__message'>{message || 'Getting things ready...'}</p>
             </div>
         </div>
     );

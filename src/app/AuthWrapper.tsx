@@ -142,7 +142,7 @@ export const AuthWrapper = () => {
 
     const getLoadingMessage = () => {
         if (!isOnline) return localize('Loading offline mode...');
-        return localize('Initializing...');
+        return localize('Getting things ready...');
     };
 
     if (!isAuthComplete) {
