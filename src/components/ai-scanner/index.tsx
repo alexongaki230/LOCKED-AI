@@ -42,9 +42,17 @@ const STRATEGIES: { key: Strategy; label: string; desc: string }[] = [
     { key: 'matches_differs',label: 'Matches / Differs', desc: 'Finds the best digit for Matches or Differs entry.' },
 ];
 
+// Extract the last digit at the given pip position WITHOUT rounding.
+// toFixed() rounds the number, which can change the last digit and produce
+// all-zero runs (e.g. 1.23450000001 → toFixed(4) → "1.2345" is fine, but
+// 1.23449999999 → "1.2345" might become "1.2345" or "1.2344" depending on
+// the fp representation, causing incorrect digits).
+// Using integer arithmetic avoids the issue: multiply, floor, mod.
 const getLastDigit = (price: number, pipSize: number): number => {
-    const fixed = price.toFixed(pipSize);
-    return parseInt(fixed[fixed.length - 1], 10);
+    // Math.round handles the tiny floating-point error at the boundary
+    // (e.g. 1.23449999999... * 10000 = 12344.9999... → round → 12345 → %10 = 5)
+    const shifted = Math.round(Math.abs(price) * Math.pow(10, pipSize));
+    return shifted % 10;
 };
 
 // ── Analysis ────────────────────────────────────────────────────────────────
@@ -270,9 +278,23 @@ const openLiveTickWs = (
     ws.onmessage = e => {
         try {
             const data = JSON.parse(e.data);
-            if (data.tick?.quote !== undefined) {
-                onTick(getLastDigit(data.tick.quote, pipSize));
+            if (!data.tick) return;
+
+            let digit: number;
+
+            // pip_sized is a pre-formatted string from the server (e.g. "1234.5678").
+            // The last character IS the exact last digit — no floating-point rounding at all.
+            if (data.tick.pip_sized !== undefined && data.tick.pip_sized !== null) {
+                const s = String(data.tick.pip_sized).trim();
+                digit = parseInt(s[s.length - 1], 10);
+            } else if (data.tick.quote !== undefined) {
+                // Fallback: use integer arithmetic (no toFixed rounding)
+                digit = getLastDigit(data.tick.quote, pipSize);
+            } else {
+                return;
             }
+
+            if (!isNaN(digit)) onTick(digit);
         } catch { /* ignore */ }
     };
     return ws;
