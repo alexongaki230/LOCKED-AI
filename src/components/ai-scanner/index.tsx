@@ -451,19 +451,27 @@ const AIScanner: React.FC = () => {
                             </div>
 
                             {/* Scan depth */}
-                            <div className='ai-scanner__scan-row'>
-                                <div className='ai-scanner__section-label' style={{ marginBottom: 0 }}>Scan depth</div>
-                                <div className='ai-scanner__ticks-ctrl'>
-                                    <span>TICKS</span>
-                                    <input
-                                        type='number'
-                                        min={100}
-                                        max={5000}
-                                        step={100}
-                                        value={ticks}
-                                        disabled={isScanning}
-                                        onChange={e => setTicks(Math.max(100, Math.min(5000, parseInt(e.target.value) || 1000)))}
-                                    />
+                            <div className='ai-scanner__ticks-slider-row'>
+                                <div className='ai-scanner__ticks-slider-header'>
+                                    <span className='ai-scanner__section-label' style={{ marginBottom: 0 }}>Scan Depth</span>
+                                    <span className='ai-scanner__ticks-slider-value'>{ticks} ticks</span>
+                                </div>
+                                <input
+                                    className='ai-scanner__ticks-slider'
+                                    type='range'
+                                    min={100}
+                                    max={1000}
+                                    step={100}
+                                    value={ticks}
+                                    disabled={isScanning}
+                                    onChange={e => setTicks(parseInt(e.target.value))}
+                                />
+                                <div className='ai-scanner__ticks-slider-labels'>
+                                    <span>100</span>
+                                    <span>Fast</span>
+                                    <span>500</span>
+                                    <span>Precise</span>
+                                    <span>1000</span>
                                 </div>
                             </div>
 

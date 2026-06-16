@@ -270,10 +270,7 @@
     }
 
     // ── Scan depth row ─────────────────────────────────────────────────────
-    &__scan-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    &__ticks-slider-row {
         margin-bottom: 1.8rem;
         padding: 1rem 1.4rem;
         background: rgba(211, 162, 85, 0.04);
@@ -281,49 +278,78 @@
         border: 1px solid rgba(211, 162, 85, 0.12);
     }
 
-    &__ticks-ctrl {
+    &__ticks-slider-header {
         display: flex;
         align-items: center;
-        gap: 0.9rem;
+        justify-content: space-between;
+        margin-bottom: 0.8rem;
+    }
 
-        span {
-            font-size: 1rem;
-            font-weight: 700;
-            color: rgba(211, 162, 85, 0.5);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+    &__ticks-slider-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #D3A255;
+        letter-spacing: 0.04em;
+    }
+
+    &__ticks-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 5px;
+        border-radius: 3px;
+        background: linear-gradient(
+            to right,
+            rgba(211, 162, 85, 0.8) 0%,
+            rgba(211, 162, 85, 0.8) calc((var(--slider-pct, 44%)) ),
+            rgba(211, 162, 85, 0.18) calc((var(--slider-pct, 44%)) ),
+            rgba(211, 162, 85, 0.18) 100%
+        );
+        outline: none;
+        cursor: pointer;
+        display: block;
+        margin-bottom: 0.6rem;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #D3A255;
+            box-shadow: 0 0 6px rgba(211, 162, 85, 0.55);
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+            &:hover {
+                transform: scale(1.15);
+                box-shadow: 0 0 10px rgba(211, 162, 85, 0.7);
+            }
         }
 
-        input {
-            width: 8.5rem;
-            padding: 0.55rem 0.9rem;
-            border: 1.5px solid rgba(211, 162, 85, 0.2);
-            border-radius: 0.7rem;
-            font-size: 1.25rem;
-            font-weight: 700;
-            text-align: center;
-            color: #fdf3d0;
-            background: rgba(255, 255, 255, 0.04);
-            outline: none;
-            font-family: inherit;
-            transition: border-color 0.15s;
-
-            &:focus {
-                border-color: #D3A255;
-                box-shadow: 0 0 0 2px rgba(211, 162, 85, 0.1);
-            }
-
-            &:disabled {
-                opacity: 0.35;
-                cursor: not-allowed;
-            }
-
-            &::-webkit-inner-spin-button,
-            &::-webkit-outer-spin-button {
-                opacity: 0.4;
-                filter: invert(1);
-            }
+        &::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #D3A255;
+            border: none;
+            box-shadow: 0 0 6px rgba(211, 162, 85, 0.55);
+            cursor: pointer;
         }
+
+        &:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+    }
+
+    &__ticks-slider-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: rgba(211, 162, 85, 0.38);
+        letter-spacing: 0.05em;
+        padding: 0 2px;
     }
 
     // ── Scan Results ────────────────────────────────────────────────────────
