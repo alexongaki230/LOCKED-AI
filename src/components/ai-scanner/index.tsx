@@ -4,7 +4,7 @@ import { getAppId, getSocketURL } from '@/components/shared/utils/config/config'
 import { useStore } from '@/hooks/useStore';
 import './ai-scanner.scss';
 
-type Strategy = 'over0_under9' | 'over1_under8' | 'over2_under7' | 'over3_under6' | 'over4_under5' | 'even_odd';
+type Strategy = 'over1_under8' | 'over2_under7' | 'over3_under6' | 'over4_under5' | 'even_odd';
 
 interface ScanResult {
     symbol: string;
@@ -38,7 +38,6 @@ const MARKETS = [
 ];
 
 const STRATEGIES: { key: Strategy; label: string; desc: string }[] = [
-    { key: 'over0_under9', label: 'Over0 / Under9', desc: 'High win-rate ~90% baseline. Finds markets where digits heavily favour >0 or <9.' },
     { key: 'over1_under8', label: 'Over1 / Under8', desc: '~80% baseline. Scans for strongest Over 1 or Under 8 edge across markets.' },
     { key: 'over2_under7', label: 'Over2 / Under7', desc: '~70% baseline. Scans for strongest Over 2 or Under 7 edge across markets.' },
     { key: 'over3_under6', label: 'Over3 / Under6', desc: '~60% baseline. Higher payout range — looks for dominant mid-digit bias.' },
@@ -61,15 +60,6 @@ const analyzeDigits = (
     const n = recent.length;
 
     switch (strategy) {
-        case 'over0_under9': {
-            const oRate = (recent.filter(d => d > 0).length / n) * 100;
-            const uRate = (recent.filter(d => d < 9).length / n) * 100;
-            const oEdge = oRate - 90;
-            const uEdge = uRate - 90;
-            return oEdge >= uEdge
-                ? { tradeType: 'Over 0',  winRate: oRate, score: oEdge }
-                : { tradeType: 'Under 9', winRate: uRate, score: uEdge };
-        }
         case 'over1_under8': {
             const oRate = (recent.filter(d => d > 1).length / n) * 100;
             const uRate = (recent.filter(d => d < 8).length / n) * 100;
@@ -115,15 +105,13 @@ const analyzeDigits = (
                 ? { tradeType: 'Even', winRate: eRate, score: eEdge }
                 : { tradeType: 'Odd',  winRate: oRate, score: oEdge };
         }
+        default:
+            return { tradeType: 'N/A', winRate: 0, score: 0 };
     }
 };
 
 const getXMLParams = (strategy: Strategy, tradeType: string): XMLParams => {
     switch (strategy) {
-        case 'over0_under9':
-            return tradeType === 'Over 0'
-                ? { tradeTypeDeriv: 'overunder', contractType: 'both', purchaseType: 'DIGITOVER',  prediction: 0, hasPredict: true }
-                : { tradeTypeDeriv: 'overunder', contractType: 'both', purchaseType: 'DIGITUNDER', prediction: 9, hasPredict: true };
         case 'over1_under8':
             return tradeType === 'Over 1'
                 ? { tradeTypeDeriv: 'overunder', contractType: 'both', purchaseType: 'DIGITOVER',  prediction: 1, hasPredict: true }
@@ -231,7 +219,7 @@ const fetchAllMarketsAtOnce = (
             resolve(results);
         };
 
-        const timer = setTimeout(finish, 30000);
+        const timer = setTimeout(finish, 10000);
 
         ws.onopen = () => {
             markets.forEach(({ symbol }, idx) => {
@@ -288,7 +276,7 @@ const AIScanner: React.FC = () => {
 
     const [isOpen,    setIsOpen]    = useState(false);
     const [strategy,  setStrategy]  = useState<Strategy>('over1_under8');
-    const [ticks,     setTicks]     = useState(1000);
+    const [ticks,     setTicks]     = useState(500);
 
     const [stake,      setStake]      = useState(2);
     const [martingale, setMartingale] = useState(2.5);
