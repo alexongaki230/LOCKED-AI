@@ -361,7 +361,10 @@ const AIScanner: React.FC = () => {
     const [statusMsg,  setStatusMsg]  = useState('');
     const [progress,   setProgress]   = useState(0);
 
-    const [liveDigits, setLiveDigits] = useState<number[]>([]);
+    // liveFreq[d] = how many times digit d appeared in the live stream
+    const [liveFreq,   setLiveFreq]   = useState<number[]>(Array(10).fill(0));
+    const [liveTotal,  setLiveTotal]  = useState(0);
+    const [liveLatest, setLiveLatest] = useState<number | null>(null);
     const liveWsRef = useRef<WebSocket | null>(null);
     const abortRef  = useRef(false);
 
@@ -371,14 +374,18 @@ const AIScanner: React.FC = () => {
             try { liveWsRef.current.close(); } catch { /* ignore */ }
             liveWsRef.current = null;
         }
-        setLiveDigits([]);
+        setLiveFreq(Array(10).fill(0));
+        setLiveTotal(0);
+        setLiveLatest(null);
         if (!result) return;
 
         const market = MARKETS.find(m => m.symbol === result.symbol);
         if (!market) return;
 
         const ws = openLiveTickWs(market.symbol, market.pipSize, digit => {
-            setLiveDigits(prev => [...prev.slice(-19), digit]);
+            setLiveFreq(prev => { const n = [...prev]; n[digit]++; return n; });
+            setLiveTotal(prev => prev + 1);
+            setLiveLatest(digit);
         });
         liveWsRef.current = ws;
 
@@ -597,39 +604,101 @@ const AIScanner: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* ── Live Tick Stream ─────────────────────────────── */}
-                            {result && (
-                                <div className='ai-scanner__live'>
-                                    <div className='ai-scanner__live-header'>
-                                        <span className='ai-scanner__live-dot' />
-                                        <span className='ai-scanner__live-label'>
-                                            Live — {result.marketName}
-                                        </span>
-                                        <span className='ai-scanner__live-hint'>colour = outcome for {result.tradeType}</span>
-                                    </div>
-                                    <div className='ai-scanner__live-digits'>
-                                        {liveDigits.length === 0 && (
-                                            <span className='ai-scanner__live-waiting'>Waiting for ticks…</span>
+                            {/* ── Live Digit Circles ──────────────────────────── */}
+                            {result && (() => {
+                                const maxFreq    = liveTotal > 0 ? Math.max(...liveFreq) : 0;
+                                const R          = 18;
+                                const CIRC       = 2 * Math.PI * R;
+
+                                return (
+                                    <div className='ai-scanner__live'>
+                                        <div className='ai-scanner__live-header'>
+                                            <span className='ai-scanner__live-dot' />
+                                            <span className='ai-scanner__live-label'>
+                                                Live — {result.marketName}
+                                            </span>
+                                            {liveTotal > 0
+                                                ? <span className='ai-scanner__live-count'>{liveTotal} ticks</span>
+                                                : <span className='ai-scanner__live-hint'>Connecting…</span>
+                                            }
+                                        </div>
+
+                                        {liveTotal === 0
+                                            ? <div className='ai-scanner__live-waiting'>Waiting for ticks…</div>
+                                            : (
+                                                <div className='ai-scanner__dcircles'>
+                                                    {Array.from({ length: 10 }, (_, d) => {
+                                                        const count   = liveFreq[d];
+                                                        const pct     = Math.round(count / liveTotal * 100);
+                                                        const color   = digitColor(d, result.tradeType);
+                                                        const isTop   = count === maxFreq && maxFreq > 0;
+                                                        const isNew   = d === liveLatest;
+                                                        const dash    = (pct / 100) * CIRC;
+
+                                                        return (
+                                                            <div
+                                                                key={d}
+                                                                className={[
+                                                                    'ai-scanner__dcircle',
+                                                                    `ai-scanner__dcircle--${color}`,
+                                                                    isTop ? 'ai-scanner__dcircle--top' : '',
+                                                                    isNew ? 'ai-scanner__dcircle--latest' : '',
+                                                                ].filter(Boolean).join(' ')}
+                                                            >
+                                                                <svg viewBox='0 0 44 44' width='52' height='52'>
+                                                                    {/* Track ring */}
+                                                                    <circle
+                                                                        cx='22' cy='22' r={R}
+                                                                        fill='none'
+                                                                        stroke='rgba(255,255,255,0.07)'
+                                                                        strokeWidth='3.5'
+                                                                    />
+                                                                    {/* Progress arc — starts from 12 o'clock */}
+                                                                    <circle
+                                                                        cx='22' cy='22' r={R}
+                                                                        fill='none'
+                                                                        stroke='currentColor'
+                                                                        strokeWidth='3.5'
+                                                                        strokeLinecap='round'
+                                                                        strokeDasharray={`${dash.toFixed(2)} ${(CIRC - dash).toFixed(2)}`}
+                                                                        style={{ transform: 'rotate(-90deg)', transformOrigin: '22px 22px', transition: 'stroke-dasharray 0.4s ease' }}
+                                                                    />
+                                                                    {/* Digit */}
+                                                                    <text
+                                                                        x='22' y='22'
+                                                                        textAnchor='middle'
+                                                                        dominantBaseline='central'
+                                                                        className='ai-scanner__dcircle-num'
+                                                                    >
+                                                                        {d}
+                                                                    </text>
+                                                                </svg>
+                                                                <div className='ai-scanner__dcircle-pct'>{pct}%</div>
+                                                                {isNew && <div className='ai-scanner__dcircle-pulse' />}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )
+                                        }
+
+                                        {liveTotal > 0 && (
+                                            <div className='ai-scanner__live-legend'>
+                                                {result.tradeType.startsWith('Over') || result.tradeType.startsWith('Under')
+                                                    ? <><span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--win' />Win &nbsp;<span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--lose' />Lose</>
+                                                    : result.tradeType === 'Even' || result.tradeType === 'Odd'
+                                                    ? <><span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--win' />Even &nbsp;<span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--lose' />Odd</>
+                                                    : result.tradeType.startsWith('Matches')
+                                                    ? <><span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--match' />Target &nbsp;<span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--neutral' />Other</>
+                                                    : result.tradeType.startsWith('Differs')
+                                                    ? <><span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--win' />Win &nbsp;<span className='ai-scanner__live-legend-dot ai-scanner__live-legend-dot--lose' />Target (avoid)</>
+                                                    : null
+                                                }
+                                            </div>
                                         )}
-                                        {liveDigits.map((d, i) => {
-                                            const isLatest = i === liveDigits.length - 1;
-                                            const color = digitColor(d, result.tradeType);
-                                            return (
-                                                <span
-                                                    key={i}
-                                                    className={[
-                                                        'ai-scanner__live-digit',
-                                                        `ai-scanner__live-digit--${color}`,
-                                                        isLatest ? 'ai-scanner__live-digit--latest' : '',
-                                                    ].join(' ')}
-                                                >
-                                                    {d}
-                                                </span>
-                                            );
-                                        })}
                                     </div>
-                                </div>
-                            )}
+                                );
+                            })()}
 
                             {/* Progress */}
                             {isScanning && (
