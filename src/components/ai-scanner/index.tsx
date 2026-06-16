@@ -12,6 +12,10 @@ interface ScanResult {
     tradeType: string;
     winRate: number;
     score: number;
+    // Digit frequency from historical ticks — same data source as D-Circles tab.
+    // digitFreq[d] = how many times digit d appeared across all fetched ticks.
+    digitFreq: number[];
+    scanTotal: number;
 }
 
 interface XMLParams {
@@ -374,10 +378,17 @@ const AIScanner: React.FC = () => {
             try { liveWsRef.current.close(); } catch { /* ignore */ }
             liveWsRef.current = null;
         }
-        setLiveFreq(Array(10).fill(0));
-        setLiveTotal(0);
         setLiveLatest(null);
-        if (!result) return;
+        if (!result) {
+            setLiveFreq(Array(10).fill(0));
+            setLiveTotal(0);
+            return;
+        }
+
+        // Pre-seed with the historical scan data so percentages match D-Circles from the start.
+        // Guard: result may be from a previous session/state without digitFreq yet.
+        setLiveFreq(Array.isArray(result.digitFreq) ? [...result.digitFreq] : Array(10).fill(0));
+        setLiveTotal(result.scanTotal ?? 0);
 
         const market = MARKETS.find(m => m.symbol === result.symbol);
         if (!market) return;
@@ -440,7 +451,12 @@ const AIScanner: React.FC = () => {
             const market = MARKETS.find(m => m.symbol === symbol);
             if (!market || !digits.length) return;
             const { tradeType, winRate, score } = analyzeDigits(digits, strategy);
-            results.push({ symbol, marketName: market.name, tradeType, winRate, score });
+
+            // Build full digit frequency from ALL fetched ticks (same basis as D-Circles).
+            const digitFreq = Array(10).fill(0) as number[];
+            digits.forEach(d => { digitFreq[d]++; });
+
+            results.push({ symbol, marketName: market.name, tradeType, winRate, score, digitFreq, scanTotal: digits.length });
         });
 
         if (results.length > 0) {
@@ -626,6 +642,7 @@ const AIScanner: React.FC = () => {
                                         {liveTotal === 0
                                             ? <div className='ai-scanner__live-waiting'>Waiting for ticks…</div>
                                             : (
+                                                <div className='ai-scanner__dcircles-wrap'>
                                                 <div className='ai-scanner__dcircles'>
                                                     {Array.from({ length: 10 }, (_, d) => {
                                                         const count   = liveFreq[d];
@@ -678,6 +695,15 @@ const AIScanner: React.FC = () => {
                                                             </div>
                                                         );
                                                     })}
+                                                </div>
+
+                                                {/* ── Moving cursor ── animated arrow that jumps to the active digit */}
+                                                <div className='ai-scanner__dcursor-track'>
+                                                    <div
+                                                        className={`ai-scanner__dcursor${liveLatest !== null ? ' ai-scanner__dcursor--visible' : ''}`}
+                                                        style={{ left: `${liveLatest !== null ? ((liveLatest + 0.5) / 10) * 100 : 5}%` }}
+                                                    />
+                                                </div>
                                                 </div>
                                             )
                                         }
