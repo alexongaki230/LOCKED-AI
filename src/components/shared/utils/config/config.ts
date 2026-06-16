@@ -4,6 +4,7 @@ export const APP_IDS = {
     LOCALHOST: 84799,
     PRODUCTION: '33wSP7U3hjAPonrQEN2oF',
     PRODUCTION_LEGACY: 84799,
+    FROSTYDBOT: 'dkvRyLjorDCwhDF',
 };
 
 export const livechat_license_id = 12049137;
@@ -11,6 +12,8 @@ export const livechat_client_id = '66aa088aad5a414484c1fd1fa8a5ace7';
 
 export const domain_app_ids = {
     'dbot.deriv.com': APP_IDS.PRODUCTION,
+    'www.frostydbot.site': APP_IDS.FROSTYDBOT,
+    'frostydbot.site': APP_IDS.FROSTYDBOT,
 };
 
 export const getCurrentProductionDomain = () =>
@@ -29,7 +32,6 @@ export const isTestLink = () => {
         window.location.origin?.includes('.replit.dev') ||
         window.location.origin?.includes('.repl.co') ||
         window.location.origin?.includes('.replit.app') ||
-        window.location.origin?.includes('frostydbot.site') ||
         isLocal()
     );
 };
@@ -65,24 +67,18 @@ export const getDefaultAppIdAndUrl = () => {
     }
 
     const current_domain = getCurrentProductionDomain() ?? '';
-    // Known production domains keep their specific OAuth app ID for login/trading.
-    // Everything else falls back to the numeric 84799 so WebSocket API calls work.
     const app_id = domain_app_ids[current_domain as keyof typeof domain_app_ids] ?? APP_IDS.LOCALHOST;
 
     return { app_id, server_url };
 };
 
 export const getAppId = () => {
-    // Manual override via localStorage (set from the /endpoint page)
     const config_app_id = window.localStorage.getItem('config.app_id');
     if (config_app_id) return config_app_id;
 
-    // Test/local environments (Replit, localhost, .binary.sx, etc.) always use 84799
     if (isTestLink()) return APP_IDS.LOCALHOST;
 
     const current_domain = getCurrentProductionDomain() ?? '';
-    // Known production domains keep their OAuth app ID so login and trading work correctly.
-    // Any other unknown domain also falls back to 84799 (valid numeric WebSocket API app ID).
     return domain_app_ids[current_domain as keyof typeof domain_app_ids] ?? APP_IDS.LOCALHOST;
 };
 
@@ -140,7 +136,6 @@ export const generateOAuthURL = () => {
     const original_url = new URL(oauth_url);
     const hostname = window.location.hostname;
 
-    // First priority: Check for configured server URLs (for QA/testing environments)
     const configured_server_url = (LocalStorageUtils.getValue(LocalStorageConstants.configServerURL) ||
         localStorage.getItem('config.server_url')) as string;
 
@@ -154,18 +149,18 @@ export const generateOAuthURL = () => {
     ) {
         original_url.hostname = configured_server_url;
     } else if (original_url.hostname.includes('oauth.deriv.')) {
-        // Second priority: Domain-based OAuth URL setting for .me and .be domains
         if (hostname.includes('.deriv.me')) {
             original_url.hostname = 'oauth.deriv.me';
         } else if (hostname.includes('.deriv.be')) {
             original_url.hostname = 'oauth.deriv.be';
         } else {
-            // Fallback to original logic for other domains
+            // Only override oauth domain for actual Deriv subdomains, not custom domains like frostydbot.site
             const current_domain = getCurrentProductionDomain();
-            if (current_domain) {
+            if (current_domain && current_domain.includes('deriv.')) {
                 const domain_suffix = current_domain.replace(/^[^.]+\./, '');
                 original_url.hostname = `oauth.${domain_suffix}`;
             }
+            // For custom domains (frostydbot.site etc.), keep oauth.deriv.com as-is
         }
     }
     return original_url.toString() || oauth_url;

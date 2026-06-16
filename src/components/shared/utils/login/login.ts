@@ -37,8 +37,9 @@ export const loginUrl = ({ language }: TLoginUrl) => {
         const current_domain = getCurrentProductionDomain();
         let oauth_domain = deriv_urls.DERIV_HOST_NAME;
 
-        if (current_domain) {
-            // Extract domain suffix (e.g., 'deriv.me' from 'dbot.deriv.me')
+        // Only override the OAuth domain for actual Deriv subdomains (e.g. dbot.deriv.me → deriv.me)
+        // Custom domains like frostydbot.site must keep oauth.deriv.com as the OAuth host
+        if (current_domain && current_domain.includes('deriv.')) {
             const domain_suffix = current_domain.replace(/^[^.]+\./, '');
             oauth_domain = domain_suffix;
         }
