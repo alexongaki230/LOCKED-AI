@@ -4,7 +4,7 @@ import { getAppId, getSocketURL } from '@/components/shared/utils/config/config'
 import { useStore } from '@/hooks/useStore';
 import './ai-scanner.scss';
 
-type Strategy = 'over1_under8' | 'over2_under7' | 'even_odd' | 'matches_differs';
+type Strategy = 'over1_under8' | 'over2_under7' | 'even_odd';
 
 interface ScanResult {
     symbol: string;
@@ -41,7 +41,6 @@ const STRATEGIES: { key: Strategy; label: string; desc: string }[] = [
     { key: 'over1_under8',    label: 'Over1 / Under8',    desc: 'Scans Over 1 and Under 8 digit patterns across markets.' },
     { key: 'over2_under7',    label: 'Over2 / Under7',    desc: 'Scans Over 2 and Under 7 digit patterns across markets.' },
     { key: 'even_odd',        label: 'Even / Odd',        desc: 'Scans Even and Odd last-digit patterns across markets.' },
-    { key: 'matches_differs', label: 'Matches / Differs', desc: 'Finds the best digit for Matches or Differs entry.' },
 ];
 
 const getLastDigit = (price: number, pipSize: number): number => {
@@ -86,49 +85,6 @@ const analyzeDigits = (
                 ? { tradeType: 'Even', winRate: eRate, score: eEdge }
                 : { tradeType: 'Odd',  winRate: oRate, score: oEdge };
         }
-        case 'matches_differs': {
-            const counts = new Array(10).fill(0);
-            recent.forEach(d => counts[d]++);
-
-            // Use the last 20 ticks as a recency tie-breaker so that when
-            // multiple digits share the same overall count, we pick the one
-            // that has been most active recently instead of always defaulting
-            // to digit 0 (which is what indexOf would return on a tie).
-            const tail = recent.slice(-20);
-            const tailCounts = new Array(10).fill(0);
-            tail.forEach(d => { tailCounts[d]++; });
-
-            const maxCount = Math.max(...counts);
-            const minCount = Math.min(...counts);
-
-            // Matches: digit with highest overall count; break ties by highest recency count
-            let maxIdx = 0;
-            let bestTail = -1;
-            for (let i = 0; i < 10; i++) {
-                if (counts[i] === maxCount && tailCounts[i] > bestTail) {
-                    bestTail = tailCounts[i];
-                    maxIdx   = i;
-                }
-            }
-
-            // Differs: digit with lowest overall count; break ties by lowest recency count
-            let minIdx = 0;
-            let worstTail = Infinity;
-            for (let i = 0; i < 10; i++) {
-                if (counts[i] === minCount && tailCounts[i] < worstTail) {
-                    worstTail = tailCounts[i];
-                    minIdx    = i;
-                }
-            }
-
-            const diffRate  = ((n - counts[minIdx]) / n) * 100;
-            const matchRate = (counts[maxIdx] / n) * 100;
-            const diffEdge  = diffRate  - 90;
-            const matchEdge = matchRate - 10;
-            return diffEdge >= matchEdge
-                ? { tradeType: `Differs ${minIdx}`, winRate: diffRate,  score: diffEdge  }
-                : { tradeType: `Matches ${maxIdx}`, winRate: matchRate, score: matchEdge };
-        }
     }
 };
 
@@ -146,12 +102,6 @@ const getXMLParams = (strategy: Strategy, tradeType: string): XMLParams => {
             return tradeType === 'Even'
                 ? { tradeTypeDeriv: 'evenodd', contractType: 'DIGITEVEN', purchaseType: 'DIGITEVEN', prediction: null, hasPredict: false }
                 : { tradeTypeDeriv: 'evenodd', contractType: 'DIGITODD',  purchaseType: 'DIGITODD',  prediction: null, hasPredict: false };
-        case 'matches_differs': {
-            const digit = parseInt(tradeType.split(' ')[1] ?? '0', 10);
-            return tradeType.startsWith('Matches')
-                ? { tradeTypeDeriv: 'matchdiff', contractType: 'DIGITMATCH', purchaseType: 'DIGITMATCH', prediction: digit, hasPredict: true }
-                : { tradeTypeDeriv: 'matchdiff', contractType: 'DIGITDIFF',  purchaseType: 'DIGITDIFF',  prediction: digit, hasPredict: true };
-        }
     }
 };
 
