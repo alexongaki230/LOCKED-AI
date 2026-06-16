@@ -262,9 +262,10 @@ const AppContent = observer(() => {
         if (is_api_initialized) {
             init();
             setIsLoading(true);
-            if (!client.is_logged_in) {
-                changeActiveSymbolLoadingState();
-            }
+            // Always call changeActiveSymbolLoadingState regardless of login state.
+            // For logged-in users this ensures loading clears even if is_landing_company_loaded
+            // never fires (e.g. when the failsafe triggers without a real API connection).
+            changeActiveSymbolLoadingState();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [is_api_initialized]);
