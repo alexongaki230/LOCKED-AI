@@ -247,13 +247,12 @@ const AppContent = observer(() => {
                 }
             }, 500);
 
-            // Set a maximum timeout to prevent infinite loading
+            // Set a maximum timeout to prevent infinite loading.
+            // No stale-closure check on is_loading — always force it off after the timeout.
             setTimeout(() => {
                 clearInterval(intervalId);
-                if (is_loading) {
-                    console.log('[Timeout] Active symbols loading timeout, showing dashboard');
-                    setIsLoading(false);
-                }
+                console.log('[Timeout] Active symbols loading timeout, showing dashboard');
+                setIsLoading(false);
             }, 5000);
         }
     };
@@ -261,10 +260,8 @@ const AppContent = observer(() => {
     React.useEffect(() => {
         if (is_api_initialized) {
             init();
-            setIsLoading(true);
-            // Always call changeActiveSymbolLoadingState regardless of login state.
-            // For logged-in users this ensures loading clears even if is_landing_company_loaded
-            // never fires (e.g. when the failsafe triggers without a real API connection).
+            // Do NOT call setIsLoading(true) here — is_loading is already true at startup.
+            // Re-setting it here would undo the 4s failsafe if the WebSocket connects late.
             changeActiveSymbolLoadingState();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
