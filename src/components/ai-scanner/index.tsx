@@ -11,6 +11,7 @@ interface ScanResult {
     marketName: string;
     tradeType: string;
     winRate: number;
+    score: number; // edge over statistical baseline — used for ranking
 }
 
 interface XMLParams {
@@ -46,33 +47,76 @@ const getLastDigit = (price: number, pipSize: number): number => {
     return parseInt(fixed[fixed.length - 1], 10);
 };
 
-const analyzeDigits = (digits: number[], strategy: Strategy): { tradeType: string; winRate: number } => {
-    if (!digits.length) return { tradeType: 'N/A', winRate: 0 };
+/**
+ * Analyse digit data and return the best trade type + a ranking score.
+ *
+ * Strategy:
+ *  - Use the most-recent 100 ticks as the primary signal (current conditions).
+ *    With 100 samples the standard-deviation for an 80%-event is ~4 %, giving
+ *    real separation between markets.  With 1000+ ticks every market converges
+ *    to the same theoretical baseline (~80 %) and one market always wins by noise.
+ *  - Rank by EDGE over the statistical baseline (actual − expected), not by the
+ *    raw win-rate.  This means "80.1 % on a market whose baseline is 80 %" scores
+ *    zero, while "86 % on a market whose baseline is 80 %" scores +6.
+ *  - winRate returned is the raw recent rate (for display), but the internal
+ *    `score` field drives market comparison.
+ */
+const analyzeDigits = (
+    digits: number[],
+    strategy: Strategy
+): { tradeType: string; winRate: number; score: number } => {
+    if (!digits.length) return { tradeType: 'N/A', winRate: 0, score: 0 };
+
+    // Most-recent 100 ticks: captures current market bias
+    const recent = digits.slice(-100);
+    const n = recent.length;
+
     switch (strategy) {
         case 'over1_under8': {
-            const o = (digits.filter(d => d > 1).length / digits.length) * 100;
-            const u = (digits.filter(d => d < 8).length / digits.length) * 100;
-            return o >= u ? { tradeType: 'Over 1', winRate: o } : { tradeType: 'Under 8', winRate: u };
+            // Baseline: Over-1 ≈ 80 %, Under-8 ≈ 80 %
+            const oRate = (recent.filter(d => d > 1).length / n) * 100;
+            const uRate = (recent.filter(d => d < 8).length / n) * 100;
+            const oEdge = oRate - 80; // positive = better than expected
+            const uEdge = uRate - 80;
+            return oEdge >= uEdge
+                ? { tradeType: 'Over 1',  winRate: oRate, score: oEdge }
+                : { tradeType: 'Under 8', winRate: uRate, score: uEdge };
         }
         case 'over2_under7': {
-            const o = (digits.filter(d => d > 2).length / digits.length) * 100;
-            const u = (digits.filter(d => d < 7).length / digits.length) * 100;
-            return o >= u ? { tradeType: 'Over 2', winRate: o } : { tradeType: 'Under 7', winRate: u };
+            // Baseline: Over-2 ≈ 70 %, Under-7 ≈ 70 %
+            const oRate = (recent.filter(d => d > 2).length / n) * 100;
+            const uRate = (recent.filter(d => d < 7).length / n) * 100;
+            const oEdge = oRate - 70;
+            const uEdge = uRate - 70;
+            return oEdge >= uEdge
+                ? { tradeType: 'Over 2',  winRate: oRate, score: oEdge }
+                : { tradeType: 'Under 7', winRate: uRate, score: uEdge };
         }
         case 'even_odd': {
-            const e = (digits.filter(d => d % 2 === 0).length / digits.length) * 100;
-            return e >= 50 ? { tradeType: 'Even', winRate: e } : { tradeType: 'Odd', winRate: 100 - e };
+            // Baseline: Even ≈ 50 %, Odd ≈ 50 %
+            const eRate = (recent.filter(d => d % 2 === 0).length / n) * 100;
+            const oRate = 100 - eRate;
+            const eEdge = eRate - 50;
+            const oEdge = oRate - 50;
+            return eEdge >= oEdge
+                ? { tradeType: 'Even', winRate: eRate, score: eEdge }
+                : { tradeType: 'Odd',  winRate: oRate, score: oEdge };
         }
         case 'matches_differs': {
+            // Baseline: each digit ≈ 10 %
             const counts = new Array(10).fill(0);
-            digits.forEach(d => counts[d]++);
+            recent.forEach(d => counts[d]++);
             const minIdx = counts.indexOf(Math.min(...counts));
             const maxIdx = counts.indexOf(Math.max(...counts));
-            const diffRate = ((digits.length - counts[minIdx]) / digits.length) * 100;
-            const matchRate = (counts[maxIdx] / digits.length) * 100;
-            return diffRate >= matchRate
-                ? { tradeType: `Differs ${minIdx}`, winRate: diffRate }
-                : { tradeType: `Matches ${maxIdx}`, winRate: matchRate };
+            // Differs: trade that digit won't appear → win rate = % of ticks NOT that digit
+            const diffRate  = ((n - counts[minIdx]) / n) * 100;
+            const matchRate = (counts[maxIdx] / n) * 100;
+            // Edge over baseline (90 % for differs, 10 % for matches)
+            const diffEdge  = diffRate  - 90;
+            const matchEdge = matchRate - 10;
+            return diffEdge >= matchEdge
+                ? { tradeType: `Differs ${minIdx}`, winRate: diffRate,  score: diffEdge  }
+                : { tradeType: `Matches ${maxIdx}`, winRate: matchRate, score: matchEdge };
         }
     }
 };
@@ -297,15 +341,17 @@ const AIScanner: React.FC = () => {
             try {
                 const digits = await fetchTickDigits(symbol, pipSize, ticks);
                 if (abortRef.current) break;
-                const { tradeType, winRate } = analyzeDigits(digits, strategy);
-                results.push({ symbol, marketName: name, tradeType, winRate });
+                const { tradeType, winRate, score } = analyzeDigits(digits, strategy);
+                results.push({ symbol, marketName: name, tradeType, winRate, score });
             } catch (err) {
                 console.warn(`[AI Scanner] Skipped ${name}:`, err);
             }
         }
 
         if (!abortRef.current && results.length > 0) {
-            const best = results.reduce((a, b) => (a.winRate > b.winRate ? a : b));
+            // Rank by score (edge over baseline), NOT raw winRate — prevents one
+            // market dominating every scan simply because of a noise advantage
+            const best = results.reduce((a, b) => (a.score > b.score ? a : b));
             setResult(best);
             setStatusMsg(`✓ Best entry: ${best.marketName} — ${best.tradeType} (${best.winRate.toFixed(1)}%)`);
             setProgress(100);
