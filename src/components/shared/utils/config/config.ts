@@ -4,6 +4,7 @@ export const APP_IDS = {
     LOCALHOST: 84799,
     PRODUCTION: '33wSP7U3hjAPonrQEN2oF',
     PRODUCTION_LEGACY: 84799,
+    FROSTYDBOT: 36300,
 };
 
 export const livechat_license_id = 12049137;
@@ -11,8 +12,8 @@ export const livechat_client_id = '66aa088aad5a414484c1fd1fa8a5ace7';
 
 export const domain_app_ids = {
     'dbot.deriv.com': APP_IDS.PRODUCTION,
-    'www.frostydbot.site': APP_IDS.LOCALHOST,
-    'frostydbot.site': APP_IDS.LOCALHOST,
+    'www.frostydbot.site': APP_IDS.FROSTYDBOT,
+    'frostydbot.site': APP_IDS.FROSTYDBOT,
 };
 
 export const getCurrentProductionDomain = () =>
