@@ -520,6 +520,140 @@
         }
     }
 
+    // ── All Markets Table ────────────────────────────────────────────────────
+    &__markets-table {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.8rem;
+    }
+
+    &__market-row {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.85rem 1.1rem;
+        border-radius: 0.9rem;
+        border: 1px solid rgba(211, 162, 85, 0.1);
+        background: rgba(211, 162, 85, 0.03);
+        cursor: pointer;
+        transition: all 0.18s ease;
+        outline: none;
+
+        &:hover {
+            background: rgba(211, 162, 85, 0.08);
+            border-color: rgba(211, 162, 85, 0.25);
+        }
+
+        &--active {
+            background: rgba(211, 162, 85, 0.1);
+            border-color: rgba(211, 162, 85, 0.4);
+            box-shadow: 0 0 0 1px rgba(211, 162, 85, 0.15);
+        }
+
+        &--best {
+            border-color: rgba(211, 162, 85, 0.3);
+            background: rgba(211, 162, 85, 0.07);
+        }
+
+        &--best#{&}--active {
+            border-color: #D3A255;
+            box-shadow: 0 0 12px rgba(211, 162, 85, 0.2);
+        }
+    }
+
+    &__market-rank {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: rgba(211, 162, 85, 0.45);
+        min-width: 2rem;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    &__market-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__market-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fdf3d0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__market-trade {
+        font-size: 0.88rem;
+        color: rgba(211, 162, 85, 0.55);
+        font-weight: 500;
+    }
+
+    &__market-rate {
+        font-size: 1.15rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        padding: 0.25rem 0.7rem;
+        border-radius: 0.6rem;
+
+        &--strong {
+            color: #66bb6a;
+            background: rgba(102, 187, 106, 0.12);
+        }
+
+        &--good {
+            color: #D3A255;
+            background: rgba(211, 162, 85, 0.12);
+        }
+
+        &--weak {
+            color: rgba(211, 162, 85, 0.45);
+            background: rgba(211, 162, 85, 0.06);
+        }
+    }
+
+    // ── Mini bar chart (inside market row) ───────────────────────────────────
+    &__mini-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 3.2rem;
+        flex-shrink: 0;
+    }
+
+    &__mini-bar-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        height: 100%;
+        justify-content: flex-end;
+    }
+
+    &__mini-bar {
+        width: 5px;
+        border-radius: 2px 2px 0 0;
+        transition: height 0.3s ease;
+        flex-shrink: 0;
+
+        &--win     { background: #66bb6a; opacity: 0.8; }
+        &--lose    { background: #ef5350; opacity: 0.8; }
+        &--match   { background: #D3A255; opacity: 0.8; }
+        &--neutral { background: rgba(211, 162, 85, 0.25); }
+    }
+
+    &__mini-bar-label {
+        font-size: 0.6rem;
+        color: rgba(211, 162, 85, 0.3);
+        font-weight: 600;
+        line-height: 1;
+    }
+
     // ── Live tick stream ────────────────────────────────────────────────────
     &__live {
         margin-bottom: 1.6rem;
